@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="il.swhm.data.mappers.GeneralMapper">
+
+<resultMap type="Customer" id="CustomerMap">
+	<id property="hospital.id" column="hospital_id"/>
+	<id property="id" column="customer_id"/>
+	<result property="name" column="description"/>
+	<result column="current_count_id" property="currentCountId"/>
+	<result column="current_count_type" property="currentCountType"/>
+	<result column="not_transmit_count" property="notTransmitedCount"/>
+	<result column="current_order_id" property="currentOrderId"/>
+	<result column="current_order_type" property="currentOrderType"/>
+	<result column="not_transmit_order" property="notTransmitedOrder"/>
+	<association property="hospital" column="hospital_id" javaType="Hospital">
+		<id property="id" column="hospital_id" />
+	</association>
+</resultMap>
+
+<resultMap type="Product" id="ProductMap">
+    <id column="id" property="id"/>
+ 	<result column="product_id" property="productId"/>
+ 	<result column="cust_product_id" property="custProductId"/>
+    <result column="cust_product_desc" property="custProductDesc"/>
+    <result column="sales_unit" property="salesUnit"/>
+    <result column="sales_unit_desc" property="salesUnitDesc"/>
+    <result column="customer_unit" property="customerUnit"/>
+    <result column="customer_unit_desc" property="customerUnitDesc"/>
+    <result column="factor" property="factor"/>
+    <result column="category" property="category"/>
+    <result column="std_quantity" property="stdQuantity"/>
+    <result column="lot1" property="lot1"/>
+    <result column="lot2" property="lot2"/>
+    <result column="lot3" property="lot3"/>
+    <result column="site" property="site"/>
+    <result column="comment_code" property="commentCode"/>
+    <result column="comment" property="comment"/>
+    <result column="count_factor" property="countFactor"/>
+    <result column="min_order_count" property="minimalOrderCount"/>
+    <result column="type" property="productType"/>
+    <result column="mitadef" property="mitadef"/>
+    <result column="doc_type" property="docType"/>
+    <result column="alternative" property="alternative"/>
+    <result column="cust_product_desc_2" property="custProductDesc2"/>
+  	<collection property="subIds" ofType="java.lang.String" javaType="arrayList">
+  	    <result property="value" column="sub_product_id"/>
+  	  </collection>
+</resultMap>
+
+<resultMap type="ManProduct" id="ManProductMap">
+    <id column="man_product_id" property="manProductId"/>
+    <result column="product_id" property="productId"/>
+ 	<result column="cust_product_id" property="custProductId"/>
+</resultMap>
+
+<resultMap type="MaraManProduct" id="MaraManProductMap">
+    <id column="man_product_id" property="manProductId"/>
+    <result column="product_id" property="productId"/>
+    <result column="cust_product_id" property="custProductId"/>
+</resultMap>
+
+<resultMap type="Approver" id="ApproverMap">
+    <id column="approver_id" property="id"/>
+    <result column="name" property="name"/>
+    <result column="signature" property="signature"/>
+</resultMap>
+
+
+
+<resultMap type="Transmit" id="TransmitMap">
+    <id column="transmit_id" property="transmitId"/>
+    <result column="transmition_time" property="transDate"/>
+    <result column="trans_status" property="transStatus"/>
+    <result column="reason" property="errMessage"/>
+</resultMap>
+
+<resultMap type="Transmit" id="TransmitFullMap" extends="TransmitMap">
+    <collection property="entities" resultMap="TransmitableMap"></collection>
+</resultMap>
+
+<resultMap type="HistoryRecord" id="HistoryRecordMap">
+    <association property="entity" column="entity_id" resultMap="ShortTransmitableMap"/>
+    <association property="transmit" column="transmit_id" resultMap="TransmitMap"/>
+</resultMap>
+
+<resultMap type="Transmitable" id="ShortTransmitableMap">
+    <discriminator javaType="String" column="entity_type">
+			<case value="COUNT" resultMap="il.swhm.data.mappers.InvCountMapper.ShortInventoryCountMap" />
+			<case value="ORDER" resultMap="il.swhm.data.mappers.OrderMapper.ShortPushOrderMap" />
+	</discriminator>
+</resultMap>
+
+    
+    <resultMap type="Transmitable" id="TransmitableMap">
+    <discriminator javaType="String" column="entity_type">
+			<case value="COUNT" resultMap="il.swhm.data.mappers.InvCountMapper.InventoryCountMap" />
+			<case value="ORDER" resultMap="il.swhm.data.mappers.OrderMapper.PushOrderMap" />
+		</discriminator>
+</resultMap>
+
+<select id="selectCustomer" resultMap="CustomerMap">
+		select customer.hospital_id,customer.customer_id,customer.description,ichead.count_id as current_count_id,ichead.count_type as current_count_type,
+		ohead.order_id as current_order_id,ohead.order_type as current_order_type,
+		(select concat(ichead2.count_id,'--',ichead2.count_type) from inventory_count_head ichead2 where ichead2.hospital_id=customer.hospital_id and ichead2.customer_id=customer.customer_id and ichead2.status='COMPLETED') as not_transmit_count,
+		(select concat(ohead2.order_id,'--',ohead2.order_type) from order_head ohead2 where ohead2.hospital_id=customer.hospital_id and ohead2.customer_id=customer.customer_id and ohead2.status='COMPLETED') as not_transmit_order
+		from customer 
+		left join inventory_count_head ichead
+		on ichead.hospital_id=customer.hospital_id and ichead.customer_id=customer.customer_id and ichead.status='IN_PROGRESS'  and ichead.station_id=#{stationId}
+		left join order_head ohead
+		on ohead.hospital_id=customer.hospital_id and ohead.customer_id=customer.customer_id and ohead.status='IN_PROGRESS'  and ohead.station_id=#{stationId}
+		where customer.hospital_id=#{hospitalId} and customer.customer_id LIKE #{customerId}
+</select>
+
+<select id="selectProductsForCustomer" resultMap="ProductMap">
+    select product.*,sub.sub_product_id 
+    from product
+    left join substitute_product sub
+    on product.product_id=sub.product_id
+    where product.hospital_id=#{hospitalId} and customer_id=#{customerId}
+    order by product.lot1
+</select>
+<select id="selectProductsForHospital" resultMap="ProductMap">
+    select product.*,sub.sub_product_id 
+    from product
+    left join substitute_product sub
+    on product.product_id=sub.product_id
+    where product.hospital_id=#{hospitalId} and (product.product_id=#{productId} or product.cust_product_id=#{productId})
+    order by product.lot1
+</select>
+
+<select id="selectManProductsForCustomer" resultMap="ManProductMap">
+    select mp.*
+    from man_product mp join product 
+    on mp.product_id=product.product_id and mp.cust_product_id=product.cust_product_id
+    where product.hospital_id=#{hospitalId} and customer_id=#{customerId}
+</select>
+
+<select id="selectProductIdbyManProduct" resultType="java.lang.String">
+    select cust_product_id from man_product mp where mp.man_product_id=#{productId}
+</select>
+
+<select id="selectGeneralProductByCustProductId" resultMap="ProductMap">
+    select distinct prd.id,prd.product_id,prd.cust_product_id,cust_product_desc,sub_product_id
+    from product prd left join substitute_product sub on prd.product_id=sub.product_id
+    where prd.cust_product_id=#{custProductId}
+</select>
+
+<select id="selectMaraProducts" resultMap="MaraManProductMap">
+   select distinct mp.*,product.cust_product_id
+    from mara_man_product mp join product 
+    on mp.product_id=product.product_id 
+    where product.hospital_id=#{hospitalId} and customer_id=#{customerId}
+</select>
+
+
+
+
+<insert id="insertTransmit" keyProperty="transmit.transmitId">
+    <selectKey keyProperty="transmit.transmitId" order="BEFORE" resultType="int">
+			SELECT IFNULL((select MAX(transmit_id)+1 from transmit where station_id=#{stationId}),1)
+	</selectKey>
+    insert into transmit (station_id,transmit_id,status,reason)
+    values(#{stationId},#{transmit.transmitId},#{transmit.transStatus},#{transmit.errMessage})
+</insert>
+<update id="updateTransmit">
+    update transmit set 
+    status=#{transmit.transStatus},
+    reason=#{transmit.errMessage}
+    where station_id=#{stationId} and transmit_id=#{transmit.transmitId}
+    
+</update>
+
+<insert id="insertTransmitLine">
+    insert into transmit_line values(#{stationId},#{transmitId},#{entityId},#{entityType})
+    
+</insert>
+
+<select id="selectApprovers" resultMap="ApproverMap">
+    select * from Approver order by id
+</select>
+
+
+<update id="updateTransmitToMaster">
+    update transmit set transmited_to_master=true where station_id=#{stationId} and transmit_id=#{transmitId}
+</update>
+
+</mapper>

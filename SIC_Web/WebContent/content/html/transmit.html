@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<title>שראל - ספירת מלאי</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-language" content="he" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<link type="text/css" rel="stylesheet" href="../style/ui-lightness/jquery-ui-1.9.0.custom.min.css" />
+<link type="text/css" rel="stylesheet" href="../style/main.css" />
+<!--[if lt IE 9]>
+		<script src="../js/extrenal/html5.js"></script>
+		<![endif]-->
+</head>
+<body id="transmiting">
+	<div class="wrap">
+		<div class="wrap">
+		<div class="logo"></div>
+			<div class="stripe"></div>
+		<div  class="connection-status">מצב חיבור :<span id="connectionStat" class="connected"></span></div>
+		<div class="button_menu">
+			<div class="big_button home_button" id="homeButton"></div>
+			<div class="big_button transmit_button" id="transmitButton"></div>
+			</div>
+			<div class="page_header">שידור הזמנות</div>
+			<div id="countTableHolder" class="table-holder">
+				<div id='selectAll' onclick='selectAllRows()' class="select-all"><div></div> בחר הכל</div>
+				<table class="table-header">
+					<tr>
+					<th width="20%">עגלה/יחידה</th>
+					<th width="40%">תיאור</th>
+					<th width="10%">סוג</th>
+					<th width="15%">תאריך</th>
+					<th width="15%">שעה</th>
+					</tr>					
+				</table>
+				<div class="table-body-holder">
+					<table id="countTableBody" class="table-body">
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="errorPopup">
+		<div id="msg" class="msgDiv"></div>
+	</div>
+	
+	<div id="warnPopup">
+		<div id="msg" class="msgDiv"></div>
+	</div>
+	
+	<div id="infoPopup">
+		<div id="msg" class="msgDiv"></div>
+	</div>
+	
+	
+	<div id="progressPopup">
+		<div id="progressText" class="text">&nbsp;</div>
+		<div class="progress"><div id="progresser"></div></div>
+	</div>
+	
+	<div id="itemsPopup">
+		<table class="items-table">
+		<thead>
+			<tr>
+				<th width="30%">פריט</th>
+				<th width="30%">תיאור</th>
+				<th id="itemsTableLotHeader" width="20%">איתור</th>
+				<th id="itemsPopupQtyHeader">כמות שנספרה</th>
+			</tr>
+		</thead>
+		<tbody id="itemsTableBody">
+		</tbody>	
+		</table>
+	</div>
+	
+	
+	
+	<script src="../js/external/jquery-1.8.3.min.js"></script>
+	<script src="../js/external/jquery-ui-1.9.1.custom.min.js"></script>
+	<script src="../js/external/jquery.keyboard.js"></script>
+	
+		<script src="../js/external/json2.min.js"></script>
+		<script src="../js/external/jquery.signaturepad.min.js"></script>
+	
+	<script src="../js/global/sicGeneralUtil.js"></script>
+	<script src="../js/global/sicRestFacade.js"></script>
+	<script src="../js/transmit.js"></script>
+</body>
+</html>

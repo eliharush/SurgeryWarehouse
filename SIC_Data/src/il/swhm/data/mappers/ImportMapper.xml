@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="il.swhm.data.mappers.ImportMapper">
+
+<select id="selectLastLoadTime" resultType="Date">
+    select lastUpdate from System
+</select>
+
+<update id="updateLastLoadTime">
+    update System set lastUpdate=CURRENT_TIMESTAMP
+</update>
+
+    
+<insert id="insertCustomer">
+    insert into customer values(#{customer.hospital.id},#{customer.id},#{customer.name})
+</insert>
+
+<insert id="insertManProduct">
+    insert into man_product values(#{manProduct.manProductId},#{manProduct.custProductId},#{manProduct.productId})
+</insert>
+
+<insert id="insertMaraManProduct">
+    insert into mara_man_product values(#{maraManProduct.manProductId},#{maraManProduct.productId},#{maraManProduct.manufactur})
+    
+</insert>
+
+<insert id="insertProduct">
+    insert into product (hospital_id,customer_id,id,product_id,cust_product_id,cust_product_desc,sales_unit,customer_unit,factor,category,std_quantity,lot1,lot2,lot3,site,type,mitadef,doc_type,sales_unit_desc,customer_unit_desc,
+    comment_code,comment,count_factor,min_order_count,alternative,cust_product_desc_2) 
+    values(#{custProduct.customer.hospital.id},#{custProduct.customer.id},#{custProduct.product.id},#{custProduct.product.productId},#{custProduct.product.custProductId},#{custProduct.product.custProductDesc},#{custProduct.product.salesUnit},#{custProduct.product.customerUnit},#{custProduct.product.factor},#{custProduct.product.category},
+    #{custProduct.product.stdQuantity},#{custProduct.product.lot1},#{custProduct.product.lot2},#{custProduct.product.lot3},#{custProduct.product.site},#{custProduct.product.productType},#{custProduct.product.mitadef},#{custProduct.product.docType}
+    ,#{custProduct.product.salesUnitDesc},#{custProduct.product.customerUnitDesc},#{custProduct.product.commentCode},#{custProduct.product.comment},#{custProduct.product.countFactor},#{custProduct.product.minimalOrderCount},
+    #{custProduct.product.alternative},#{custProduct.product.custProductDesc2})
+</insert>
+
+<insert id="insertApprover">
+    insert into approver (id,password) values(#{approver.id},#{approver.password})
+</insert>
+
+<insert id="insertSubProduct">
+    insert into substitute_product values(#{subProduct.productId},#{subProduct.subProductId})
+    
+</insert>
+
+<delete id="deleteCustomers">
+    delete from customer
+</delete>
+
+<delete id="deleteProducts">
+    delete from product
+</delete>
+  
+<delete id="deleteApprovers">
+    delete from approver
+</delete>
+
+<delete id="deleteManProducts">
+    delete from man_product
+</delete>
+
+<delete id="deleteMaraManProducts">
+    delete from mara_man_product
+</delete>
+
+<delete id="deleteSubProducts">
+    delete from substitute_product
+    
+</delete>
+
+</mapper>

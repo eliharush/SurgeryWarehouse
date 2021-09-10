@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+		<typeAlias type="il.swhm.shared.entities.Customer"	alias="Customer" />
+		<typeAlias type="il.swhm.shared.entities.Hospital" alias="Hospital" />
+		<typeAlias type="il.swhm.shared.entities.product.Product" alias="Product" />
+		<typeAlias type="il.swhm.shared.entities.product.ManProduct" alias="ManProduct" />
+		<typeAlias type="il.swhm.shared.entities.product.MaraManProduct" alias="MaraManProduct" />
+		<typeAlias type="il.swhm.shared.entities.Approver" alias="Approver" />
+		<typeAlias type="il.swhm.shared.entities.inventorycount.InventoryCount" alias="InventoryCount" />
+		<typeAlias type="il.swhm.shared.entities.inventorycount.InventoryCountLine" alias="InventoryCountLine" />
+		<typeAlias type="il.swhm.shared.entities.transmit.Transmit" alias="Transmit" />
+		<typeAlias type="il.swhm.shared.entities.HistoryRecord" alias="HistoryRecord" />
+		<typeAlias type="il.swhm.shared.entities.Transmitable" alias="Transmitable" />
+		<typeAlias type="il.swhm.shared.entities.order.PushOrderHead" alias="PushOrderHead" />
+		<typeAlias type="il.swhm.shared.entities.order.PushOrderLine" alias="PushOrderLine" />
+		
+	</typeAliases>
+	<environments default="test">
+		<environment id="development">
+			<transactionManager type="MANAGED" />
+			<dataSource type="JNDI">
+				<property name="data_source" value="java:/comp/env/jdbc/swhm_DB" />
+			</dataSource>
+		</environment>
+		<environment id="master">
+			<transactionManager type="MANAGED" />
+			<dataSource type="JNDI">
+				<property name="data_source" value="java:/comp/env/jdbc/swhm_MASTER_DB" />
+			</dataSource>
+		</environment>
+		<environment id="test">
+			<transactionManager type="JDBC" />
+			<dataSource type="UNPOOLED">
+				<property name="driver" value="com.mysql.jdbc.Driver" />
+				<property name="url" value="jdbc:mysql://localhost/swhm" />
+				<property name="username" value="root" />
+				<property name="password" value="1234" />
+			</dataSource>
+		</environment>
+	</environments>
+	<mappers>
+	    <mapper resource="il/swhm/data/mappers/GeneralMapper.xml" />
+		<mapper resource="il/swhm/data/mappers/InvCountMapper.xml" />
+		<mapper resource="il/swhm/data/mappers/ImportMapper.xml" />
+		<mapper resource="il/swhm/data/mappers/BackupMapper.xml" />
+		<mapper resource="il/swhm/data/mappers/OrderMapper.xml" />
+	</mappers>
+</configuration>

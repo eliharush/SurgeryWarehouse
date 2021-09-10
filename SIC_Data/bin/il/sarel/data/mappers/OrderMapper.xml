@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="il.swhm.data.mappers.OrderMapper">
+
+
+<resultMap type="PushOrderHead" id="PushOrderMap">
+    <id column="station_id" property="stationId"/>
+    <id column="order_id" property="orderId"/>
+    <result column="status" property="status"/>
+    <result column="order_date" property="orderDate"/>
+    <result column="order_type" property="type"/>
+    <association property="customer" javaType="Customer" resultMap="il.swhm.data.mappers.GeneralMapper.CustomerMap"/>
+    <association property="approver" column="approver_id" javaType="Approver" resultMap="il.swhm.data.mappers.GeneralMapper.ApproverMap" />
+    <collection property="lines" resultMap="PushOrderLineMap"></collection>
+    
+</resultMap>
+
+<resultMap type="PushOrderHead" id="ShortPushOrderMap">
+   <id column="station_id" property="stationId"/>
+    <id column="order_id" property="orderId"/>
+    <result column="status" property="status"/>
+    <result column="order_date" property="orderDate"/>
+    <result column="order_type" property="type"/>
+    <association property="customer" javaType="Customer" resultMap="il.swhm.data.mappers.GeneralMapper.CustomerMap"/>
+    <association property="approver" column="approver_id" javaType="Approver" resultMap="il.swhm.data.mappers.GeneralMapper.ApproverMap" />
+</resultMap>
+
+<resultMap type="PushOrderLine" id="PushOrderLineMap">
+	<id column="product_running_id" property="productRunningId"/>
+    <result column="order_qty" property="orderQty"/>
+    <result column="swhm_prod" property="swhmProduct"/>
+	<association property="product" column="product_running_id" javaType="Product" resultMap="il.swhm.data.mappers.GeneralMapper.ProductMap"/>
+</resultMap>
+
+
+<sql id="sqlPushOrder">
+    select ohead.station_id,ohead.order_id,ohead.hospital_id,ohead.status,ohead.order_date,ohead.order_type,ohead.approver_id,customer.customer_id,customer.description,
+    product.*,sub.sub_product_id as sub_product_id,oline.product_running_id,oline.order_qty,oline.swhm_prod
+    from customer 
+    join order_head ohead 
+    on customer.hospital_id=ohead.hospital_id and customer.customer_id=ohead.customer_id 
+    left join order_line oline
+    on ohead.station_id=oline.station_id and ohead.order_id=oline.order_id
+    left join product
+    on ohead.hospital_id=product.hospital_id  and oline.product_running_id=product.id
+    left join substitute_product sub
+    on product.product_id=sub.product_id 
+    </sql>
+
+<select id="selectPushOrderByOrder" resultMap="PushOrderMap">
+    <include refid="sqlPushOrder"/>
+    where ohead.station_id=#{stationId} and ohead.order_id=#{orderId}
+    <if test="status != null">
+     and ohead.status=#{status}   
+    </if>
+    order by product.lot1
+</select>
+
+<select id="selectPushOrderByCustomer" resultMap="PushOrderMap">
+    <include refid="sqlPushOrder"/>
+    where  ohead.station_id=#{stationId} and ohead.hospital_id=#{hospitalId} and ohead.customer_id=#{customerId} and ohead.status='IN_PROGRESS'
+    order by product.lot1
+</select>
+
+
+<select id="selectPushOrdersForTransmit" resultMap="PushOrderMap">
+    <include refid="sqlPushOrder"/>
+    where ohead.station_id=#{stationId} and ohead.status='COMPLETED'
+    order by product.lot1
+</select>
+
+<select id="selectPushOrdersForTransmitAndOrders" resultMap="PushOrderMap">
+    <include refid="sqlPushOrder"/>
+    where ohead.station_id=#{stationId} and ohead.status='COMPLETED'
+    and ohead.order_id IN 
+    <foreach collection="orderIds" open="(" close=")" item="item" separator=",">
+        #{item}
+    </foreach>
+    order by product.lot1
+</select>
+
+
+<insert id="insertPushOrder" keyProperty="order.orderId">
+    <selectKey keyProperty="order.orderId" order="BEFORE" resultType="int">
+			SELECT IFNULL((select MAX(order_id)+1 from order_head where station_id=#{order.stationId}),1)
+	</selectKey>
+	insert into order_head (station_id,order_id,hospital_id,customer_id,order_type)
+	values (#{order.stationId},#{order.orderId},#{order.customer.hospital.id},#{order.customer.id},#{order.type})
+</insert>
+
+<insert id="insertPushOrderLine">
+    insert into order_line (station_id,order_id,product_running_id,product_id,cust_product_id,order_qty,swhm_prod)
+    values (#{order.stationId},#{order.orderId},#{ol.product.id},#{ol.product.productId},#{ol.product.custProductId},#{ol.orderQty},#{ol.swhmProduct})
+</insert>
+
+<delete id="deletePushOrderHead">
+    delete from order_head where station_id=#{stationId} and order_id=#{orderId}
+</delete>
+
+<delete id="deletePushOrderLines">
+    delete from order_line where station_id=#{stationId} and order_id=#{orderId}
+</delete>
+
+
+<update id="updateOrderStatusAndApprover">
+    update order_head set status=#{newStatus} 
+    <if test="approverId != null">
+        ,approver_id=#{approverId}
+    </if>
+    where station_id=#{stationId} and order_id=#{orderId}
+</update>
+
+
+<select id="selectHistory" resultMap="il.swhm.data.mappers.GeneralMapper.HistoryRecordMap">
+    select 'ORDER' as entity_type,ohead.approver_id,ohead.order_id,ohead.hospital_id,ohead.status,ohead.order_date,ohead.order_type,customer.customer_id,customer.description,
+    ictrans.station_id,ictrans.transmit_id,ictrans.transmition_time,ictrans.status as trans_status,ictrans.reason
+    from order_head ohead
+    join customer on ohead.hospital_id=customer.hospital_id and ohead.customer_id=customer.customer_id
+    left join transmit_line ictline on ohead.station_id=ictline.station_id and ohead.order_id=ictline.transmit_entity_id and ictline.transmit_entity_type='ORDER'
+    left join transmit ictrans  on ictline.station_id=ictrans.station_id and ictline.transmit_id=ictrans.transmit_id
+    order by order_date desc
+</select>
+
+<update id="updateOrderType">
+    update order_head set order_type=#{type} where station_id=#{stationId} and order_id=#{orderId}
+</update>
+
+</mapper>

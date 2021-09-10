@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	metadata-complete="true" version="3.0">
+	<description>
+      swhm Inventory Count WebApp
+    </description>
+	<display-name>swhm Inventory count webapp</display-name>
+	<servlet>
+		<servlet-name>swhm REST API</servlet-name>
+		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<init-param>
+		<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+		<param-value>true</param-value>
+	</init-param>
+	<init-param>
+		<param-name>com.sun.jersey.config.property.packages</param-name>
+		<param-value>il.swhm.web.rest;org.codehaus.jackson.jaxrs</param-value>
+	</init-param>
+<!-- 	     <init-param>
+			<param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
+			<param-value>com.click2save.web.rest.filter.RestAuthenticationResourceFilterFactory;com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory;</param-value>
+		</init-param>  
+ -->		 <init-param>
+			<param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+			<param-value>true</param-value>
+		</init-param> 
+
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	 <servlet>
+		<servlet-name>SIC Webapp initializator</servlet-name>
+		<servlet-class>il.swhm.web.config.SICWebAppInitializatorServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<filter>
+    <filter-name>NoETagFilter</filter-name>
+    <filter-class>il.swhm.web.config.NoETagFilter</filter-class>
+  </filter>
+	 <filter>
+		<filter-name>NoCacheFilter</filter-name>
+		<filter-class>il.swhm.web.config.NoCacheFilter</filter-class>
+	</filter>
+	
+	<filter-mapping>
+	 <filter-name>NoETagFilter</filter-name>
+    <servlet-name>default</servlet-name>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+  </filter-mapping>
+	 
+	 <filter-mapping>
+	     <filter-name>NoCacheFilter</filter-name>
+	     <url-pattern>*</url-pattern>
+	 </filter-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>swhm REST API</servlet-name>
+		<url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+	<session-config>
+	    <session-timeout>30</session-timeout>
+	</session-config>
+	
+	
+	
+
+	<!-- JNDI -->
+	<resource-ref>
+		<description>DB Connection</description>
+		<res-ref-name>jdbc/swhm_DB</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+	</resource-ref>
+		<resource-ref>
+		<description>DB Connection</description>
+		<res-ref-name>jdbc/swhm_MASTER_DB</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+	</resource-ref>
+	
+	<welcome-file-list>
+		<welcome-file>default.html</welcome-file>
+	</welcome-file-list>
+
+</web-app>

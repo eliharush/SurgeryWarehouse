@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+<title>שראל - ספירת מלאי</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="content-language" content="he" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link type="text/css" rel="stylesheet" href="../style/ui-lightness/jquery-ui-1.9.0.custom.min.css" />
+<link href="../style/jquery.signaturepad.css" rel="stylesheet">
+<link href="../style/keyboard.css" rel="stylesheet" media="screen">
+<link type="text/css" rel="stylesheet" href="../style/main.css" />
+<!--[if lt IE 9]>
+		<script src="../js/extrenal/html5.js"></script>
+		<![endif]-->
+</head>
+<body id="counting">
+	<div class="wrap">
+		<div class="wrap">
+			<div class="logo"></div>
+			<div class="stripe"></div>
+			<div  class="connection-status">מצב חיבור :<span id="connectionStat" class="connected"></span></div>
+			<div class="button_menu">
+			<div class="big_button home_button" id="homeButton"></div>
+			<div class="big_button cancel_button_disabled" id="cancelButton"></div> 
+			<div class="big_button finish_button_disabled" id="finishButton"></div>
+			<div class="big_button start_button_disabled" id="startButton"></div>
+			</div>
+			<div class="page_header">דיווח ספירה</div>
+			<div class="header">
+				<ul>
+					<li class="customer">
+						<div class="content">
+						<label for="txtSelectCustomer" class="bold">בחירת עגלה/יחידה:</label><br/>
+						<input type="text" class="select-cart-text" id="txtSelectCustomer" maxlength="10"/>
+						<input type="button" value="..." class="select-cart-button" id="btnSelectCustomer"><br/>
+						<div class="customer_desc" id="customerDesc"></div>
+						</div>
+					</li>
+					<li class="counting-type">
+						<ul>
+							<li class="counting-type-top">
+								<div class="content">
+									<input type="radio" id="radFull" name="radCountType" value="FULL" checked/>
+									<label for="radFull" class="bold" onclick="$('#radFull').prop('checked',true);">ספירה מלאה</label>
+									<input type="radio" id="radPartial" name="radCountType" value="PARTIAL"/>
+									<label for="radPartial" class="bold" onclick="$('#radPartial').prop('checked',true);">ספירה חלקית</label>
+								</div>
+							</li>
+							<li class="counting-type-bottom">
+								<div class="content" id="linesDiv">
+									כמות שורות שנספרו: <span id="spnLinesCounted"></span> מתוך <span id="spnLinesTotal"></span>
+								</div>
+							</li>
+						</ul>
+						
+					</li>
+					<li class="counting-date">
+						<div class="content">
+						<label for="countDate">תאריך:</label>
+						<span id="countDate"></span>
+						<br/><br/>
+						<label for="countTime">שעה:</label>
+						<span id="countTime"></span>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<input type="text" id="hidProduct" class="product-entry"/>
+			<div id="countTableHolder" class="table-holder">
+				<table class="table-header" >
+					<tr>
+					<th width="15%"><div class="sort sort_regular" id="sort_id" onclick="sortTable('id')"></div>פריט איכילוב</th>
+					<th width="29%"><div class="sort sort_regular" id="sort_desc" onclick="sortTable('desc')"></div>תיאור</th>
+					<th width="16%">מק"ט יצרן</th>
+					<th width="9%">יח' מידה</th>
+					<th width="4%"><div class="sort sort_regular" id="sort_lot2" onclick="sortTable('lot2')"></div>איתור</th>
+					<th width="4%"><div class="sort sort_regular" id="sort_lot1" onclick="sortTable('lot1')"></div>קומה</th>
+					<th width="8%"><div class="sort sort_regular" id="sort_stdQuantity" onclick="sortTable('stdQuantity')"></div>כמות תקן</th>
+					<th width="15%"><div class="sort sort_regular" id="sort_qty" onclick="sortTable('qty')"></div>כמות</th>
+					</tr>					
+				</table>
+				<div class="table-body-holder">
+				<table id="countTableBody" class="table-body">
+				</table>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	
+	
+	<div id="itemsPopup">
+		<table class="items-table">
+		<thead>
+			<tr>
+				<th colspan=2 width="30%">פריט</th>
+				<th width="40%">תיאור</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody id="itemsTableBody">
+		</tbody>	
+		</table>
+	</div>
+	
+	<div id="itemPopup">
+		<form class="mini-item-form">
+			<label for="txtMiniItemCode" id="txtMiniItemCodeLabel">קוד פריט:</label><input type="text" disabled="disabled" id="txtMiniItemCode"/><br/><br/>
+			<label for="txtMiniItemStdQty">כמות תקן:</label><input type="text" disabled="disabled" id="txtMiniItemStdQty"/><br/><br/>
+			<label for="txtMiniLot3">תת איתור:</label><input type="text" disabled="disabled" id="txtMiniLot3"/><br/><br/>
+			<label for="txtMiniLot1">קומה:</label><input type="text" disabled="disabled" id="txtMiniLot1"/><br/><br/>
+			<label for="txtDesc2">תיאור 2:</label><input type="text" disabled="disabled" id="txtDesc2"/>
+		</form>
+	</div>
+	
+	<div id="errorPopup">
+		<div id="msg" class="msgDiv"></div>
+	</div>
+	
+	<div id="warnPopup">
+		<div id="msg" class="msgDiv"></div>
+	</div>
+	
+	<div id="infoPopup">
+		<div id="msg" class="msgDiv"></div>
+	</div>
+	
+		<div id="approverPopup">
+   	<form method="post" action="" class="sigPad">
+   		<div class="inform">
+        <label for="empName">שם משתמש:</label>
+        <select id="empName" name="empName">
+			
+		</select>
+        <label for="empPass">סיסמא:</label>
+        <input type="password" name="empPass" id="empPass" value="" class="text ui-widget-content ui-corner-all" />
+        <label for="sig">חתימה:</label>
+    <div class="sig sigWrapper">
+      
+      <canvas class="pad" width="198" height="55"></canvas>
+      <input type="hidden" name="output" class="output">
+    </div>
+   </div>
+  
+  </form>  
+</div>
+	
+	<div id="customersPopup">
+		<table class="customers-table">
+		<thead>
+			<tr>
+				<th colspan=2>לקוח קצה</th>
+				<th>שם</th>
+			</tr>
+		</thead>
+		<tbody id="customersTableBody">
+		</tbody>	
+		</table>
+	</div>
+	
+	<div id="verificationPopup">
+		<div class="parent-item-container">
+			<span id="parentItem"></span>
+		</div>
+		<div class="item-container">
+			<label for="txtVerProduct">פריט:</label>
+			<input type="text" id="txtVerProduct"/>
+			<span id="spnVerItemDesc"></span>
+		</div>
+		<div class="message-container">
+			<span id="spnMessage" class="info"></span>
+		</div>
+	</div>
+	
+	
+	<script src="../js/external/jquery-1.8.3.min.js"></script>
+	<script src="../js/external/jquery-ui-1.9.1.custom.min.js"></script>
+	<script src="../js/external/jquery.keyboard.js"></script>
+			<script src="../js/external/json2.min.js"></script>
+		<script src="../js/external/jquery.signaturepad.min.js"></script>
+	
+	
+	<script src="../js/global/sicGeneralUtil.js"></script>
+	<script src="../js/global/sicRestFacade.js"></script>
+	<script src="../js/counting.js"></script>
+</body>
+</html>

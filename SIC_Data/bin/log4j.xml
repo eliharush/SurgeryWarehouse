@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	
+	<appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %-5p %c.%M:%L - %m%n" />
+		</layout>
+	</appender>
+
+	<!-- specify the logging level for loggers from other libraries -->
+	 <category name="java.sql">
+        <priority value="DEBUG" />
+    </category>
+    <category name="org.apache.ibatis">
+        <priority value="DEBUG" />
+    </category>
+      <category name="java.sql.ResultSet">
+        <priority value="DEBUG" />
+    </category>
+    <category name="java.sql.Connection">
+        <priority value="DEBUG" />
+    </category>
+    <category name="java.sql.PreparedStatement">
+        <priority value="DEBUG" />
+    </category>
+    <category name="java.sql.Statement">
+        <priority value="DEBUG" />
+    </category>
+    <category name="il.swhm">
+    	<priority value="INFO" />
+    </category>
+    
+
+	<!-- for all other loggers log only INFO and above log messages -->
+	<root>
+		<priority value="DEBUG" />
+		<appender-ref ref="STDOUT" />
+	</root>
+
+</log4j:configuration> 

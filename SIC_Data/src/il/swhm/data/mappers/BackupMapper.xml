@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="il.swhm.data.mappers.BackupMapper">
+<insert id="insertOrderHead">
+    INSERT INTO order_head (station_id, transmit_id, hospital_id, user_name) 
+    VALUES (#{ord.stationId},#{ord.transmitId},#{ord.hospitalId},#{ord.userName});
+</insert>
+
+<insert id="insertOrderLine">
+    INSERT INTO order_line (station_id, transmit_id, customer_id, product_running_id, product_id, sales_qty, sales_unit, document_type, product_cateory) 
+    VALUES (#{ord.stationId},#{ord.transmitId},#{orl.customerId},#{orl.productRunningId},#{orl.productId},#{orl.salesQty},#{orl.salesUnit},#{orl.docType},#{orl.prodCategory});
+</insert>
+
+<select id="selectOldCounts" resultType="hashmap">
+    select ich.station_id,ich.count_id,ictl.transmit_id,count_date,
+DATEDIFF(current_date,count_date),ich.status
+from inventory_count_head ich
+left join transmit_line ictl on ich.station_id=ictl.station_id and ich.count_id=ictl.transmit_entity_id abd ictl.transmit_entity_type='COUNT'
+
+where DATEDIFF(current_date,count_date)>#{period} and ich.status!='IN_PROGRESS'
+    
+</select>
+
+<delete id="deleteTransmitHead">
+    delete from transmit where station_id=#{stationId} and transmit_id in 
+     <foreach collection="transmitIds" open="(" close=")" item="item" separator=",">
+        #{item}
+    </foreach>
+</delete>
+
+<delete id="deleteTransmitLine">
+    delete from transmit_line where station_id=#{stationId} and transmit_id in 
+     <foreach collection="transmitIds" open="(" close=")" item="item" separator=",">
+        #{item}
+    </foreach>
+</delete>
+
+<delete id="deleteCountHead">
+    delete from inventory_count_head where station_id=#{stationId} and count_id in 
+     <foreach collection="countIds" open="(" close=")" item="item" separator=",">
+        #{item}
+    </foreach>
+</delete>
+
+<delete id="deleteCountLine">
+    delete from inventory_count_line where station_id=#{stationId} and count_id in 
+     <foreach collection="countIds" open="(" close=")" item="item" separator=",">
+        #{item}
+    </foreach>
+</delete>
+    	
+
+</mapper>

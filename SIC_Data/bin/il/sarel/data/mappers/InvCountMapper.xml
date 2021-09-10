@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="il.swhm.data.mappers.InvCountMapper">
+
+
+<resultMap type="InventoryCount" id="InventoryCountMap">
+    <id column="station_id" property="stationId"/>
+    <id column="count_id" property="countId"/>
+    <result column="status" property="status"/>
+    <result column="count_date" property="countDate"/>
+    <result column="count_type" property="type"/>
+    <association property="customer" javaType="Customer" resultMap="il.swhm.data.mappers.GeneralMapper.CustomerMap"/>
+    <association property="approver" column="approver_id" javaType="Approver" resultMap="il.swhm.data.mappers.GeneralMapper.ApproverMap" />
+    <collection property="lines" resultMap="InventoryCountLineMap"></collection>
+    
+</resultMap>
+
+<resultMap type="InventoryCount" id="ShortInventoryCountMap">
+    <id column="station_id" property="stationId"/>
+    <id column="count_id" property="countId"/>
+    <result column="status" property="status"/>
+    <result column="count_date" property="countDate"/>
+    <result column="count_type" property="type"/>
+    <association property="customer" javaType="Customer" resultMap="il.swhm.data.mappers.GeneralMapper.CustomerMap"/>
+    <association property="approver" column="approver_id" javaType="Approver" resultMap="il.swhm.data.mappers.GeneralMapper.ApproverMap" />
+    
+</resultMap>
+
+<resultMap type="InventoryCountLine" id="InventoryCountLineMap">
+	<id column="product_running_id" property="productRunningId"/>
+    <result column="count_qty" property="countQty"/>
+    <result column="order_qty" property="orderQty"/>
+    <result column="count_time" property="countTime"/>
+	<association property="product" column="product_running_id" javaType="Product" resultMap="il.swhm.data.mappers.GeneralMapper.ProductMap"/>
+</resultMap>
+
+
+<sql id="sqlInventoryCount">
+    select ichead.station_id,ichead.count_id,ichead.hospital_id,ichead.status,ichead.count_date,ichead.count_type,ichead.approver_id,customer.customer_id,customer.description,
+    product.*,sub.sub_product_id as sub_product_id,icline.product_running_id,icline.count_qty,icline.order_qty,icline.count_time
+    from customer 
+    join inventory_count_head ichead 
+    on customer.hospital_id=ichead.hospital_id and customer.customer_id=ichead.customer_id 
+    left join inventory_count_line icline
+    on ichead.station_id=icline.station_id and ichead.count_id=icline.count_id
+    left join product
+    on ichead.hospital_id=product.hospital_id and ichead.customer_id=product.customer_id and icline.product_running_id=product.id
+    left join substitute_product sub
+    on product.product_id=sub.product_id 
+    </sql>
+
+<select id="selectInventoryCountByCount" resultMap="InventoryCountMap">
+    <include refid="sqlInventoryCount"/>
+    where ichead.station_id=#{stationId} and ichead.count_id=#{countId}
+    <if test="icStatus != null">
+     and ichead.status=#{icStatus}   
+    </if>
+    order by product.lot1
+</select>
+
+<select id="selectInventoryCountByCustomer" resultMap="InventoryCountMap">
+    <include refid="sqlInventoryCount"/>
+    where  ichead.station_id=#{stationId} and ichead.hospital_id=#{hospitalId} and ichead.customer_id=#{customerId} and ichead.status='IN_PROGRESS'
+    order by product.lot1
+</select>
+
+
+<select id="selectInventoryCountsForTransmit" resultMap="InventoryCountMap">
+    <include refid="sqlInventoryCount"/>
+    where ichead.station_id=#{stationId} and ichead.status='COMPLETED'
+    order by product.lot1
+</select>
+
+<select id="selectInventoryCountsForTransmitAndCounts" resultMap="InventoryCountMap">
+    <include refid="sqlInventoryCount"/>
+    where ichead.station_id=#{stationId} and ichead.status='COMPLETED'
+    and ichead.count_id IN 
+    <foreach collection="countIds" open="(" close=")" item="item" separator=",">
+        #{item}
+    </foreach>
+    order by product.lot1
+</select>
+
+
+<insert id="insertInventoryCount" keyProperty="ic.countId">
+    <selectKey keyProperty="ic.countId" order="BEFORE" resultType="int">
+			SELECT IFNULL((select MAX(count_id)+1 from inventory_count_head where station_id=#{ic.stationId}),1)
+	</selectKey>
+	insert into inventory_count_head (station_id,count_id,hospital_id,customer_id,count_type)
+	values (#{ic.stationId},#{ic.countId},#{ic.customer.hospital.id},#{ic.customer.id},#{ic.type})
+</insert>
+
+<insert id="insertInventoryCountLine">
+    insert into inventory_count_line (station_id,count_id,product_running_id,product_id,cust_product_id,count_qty,order_qty,count_time)
+    values (#{ic.stationId},#{ic.countId},#{icl.product.id},#{icl.product.productId},#{icl.product.custProductId},#{icl.countQty},#{icl.orderQty},#{icl.countTime})
+</insert>
+
+<delete id="deleteInventoryCountHead">
+    delete from inventory_count_head where station_id=#{stationId} and count_id=#{countId}
+</delete>
+
+<delete id="deleteInventoryCountLines">
+    delete from inventory_count_line where station_id=#{stationId} and count_id=#{countId}
+</delete>
+
+<update id="updateCountType">
+    update inventory_count_head set count_type=#{type} where station_id=#{stationId} and count_id=#{countId}
+</update>
+
+<update id="updateCountStatusAndApprover">
+    update inventory_count_head set status=#{newStatus},end_count_date=CURRENT_TIMESTAMP 
+    <if test="approverId != null">
+        ,approver_id=#{approverId}
+    </if>
+    where station_id=#{stationId} and count_id=#{countId}
+</update>
+
+
+<select id="selectHistory" resultMap="il.swhm.data.mappers.GeneralMapper.HistoryRecordMap">
+    select 'COUNT' as entity_type,ichead.approver_id,ichead.count_id,ichead.hospital_id,ichead.status,ichead.count_date,ichead.count_type,customer.customer_id,customer.description,
+    ictrans.station_id,ictrans.transmit_id,ictrans.transmition_time,ictrans.status as trans_status,ictrans.reason
+    from inventory_count_head ichead
+    join customer on ichead.hospital_id=customer.hospital_id and ichead.customer_id=customer.customer_id
+    left join transmit_line ictline on ichead.station_id=ictline.station_id and ichead.count_id=ictline.transmit_entity_id and ictline.transmit_entity_type='COUNT'
+    left join transmit ictrans  on ictline.station_id=ictrans.station_id and ictline.transmit_id=ictrans.transmit_id
+    order by count_date desc
+</select>
+
+<update id="updateCountQuantities">
+    update inventory_count_line set count_qty=-1,order_qty=-1 where station_id=#{stationId} and count_id=#{countId}
+</update>
+
+</mapper>
